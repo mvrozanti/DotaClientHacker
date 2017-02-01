@@ -7,11 +7,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,30 +24,56 @@ import java.util.regex.Pattern;
  */
 public class ClientDLL {
 
-    private static final File CLIENT_DLL = new File("D:\\Steam\\SteamApps\\common\\dota 2 beta\\game\\dota\\bin\\win64\\client.dll");
-    private static final String DOTA_CAMERA_DISTANCE_REGEX = "dota_camera_distance\\W*?(\\d+)";
+//    private static final File NEXOR_CLIENT_DLL = new File("D:\\Steam\\SteamApps\\common\\dota 2 beta\\game\\dota\\bin\\win64\\client.dll");
     private static final byte[] EXPECTED_HEADER = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'd', 'i', 's', 't', 'a', 'n', 'c', 'e', '\0', '\0', '\0', '\0'};
-    private static final String DEFAULT_ZOOM = "1134";
     private static ClientDLL c;
+    private File dllFile;
     private byte[] byteContent;
-//    private String content;
     private int zoomIndex;
     private String zoom;
 
     private ClientDLL() {
         zoom = "";
+        findDLLFile();
     }
 
-    public static ClientDLL getClientDLL() throws IOException {
+    public static ClientDLL getClientDLL() throws FileNotFoundException, IOException {
         if (c == null) {
             c = new ClientDLL();
-            DataInputStream dis = new DataInputStream(new FileInputStream(CLIENT_DLL));
+            DataInputStream dis = new DataInputStream(new FileInputStream(c.dllFile));
             c.byteContent = new byte[dis.available()];
             dis.read(c.byteContent);
             dis.close();
             c.findZoom();
         }
         return c;
+    }
+
+    private void findDLLFile() {
+        try {
+            Process p = Runtime.getRuntime().exec("reg query HKCR\\dota2\\Shell\\Open\\Command");
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String res = "";
+            String aux;
+            while ((aux = br.readLine()) != null) {
+                res += aux;
+            }
+            String REGEX = "REG_SZ\\s+\"([^\"]+)";
+            Matcher m = Pattern.compile(REGEX).matcher(res);
+            boolean is64 = System.getProperty("os.arch").contains("64");
+            if (m.find()) {
+                String dotaExecutablePathname = m.group(1);
+                File dotaExecutable = new File(dotaExecutablePathname);
+                File correctGameFolder = dotaExecutable.getParentFile()/*win64(1UP)*/.getParentFile()/*bin(1UP)*/.getParentFile()/*game(1UP)*/;
+                dllFile = new File(correctGameFolder.getAbsolutePath() + File.separator
+                        + "dota" + File.separator
+                        + "bin" + File.separator
+                        + "win" + (is64 ? "64" : "32")/*changes depending on arch*/ + File.separator
+                        + "client.dll");
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public String getZoom() {
@@ -87,19 +116,10 @@ public class ClientDLL {
         for (int i = 0; i < wantedZoom.length(); i++) {
             c.byteContent[zoomIndex + i] = (byte) wantedZoom.charAt(i);
         }
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(CLIENT_DLL));
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(c.dllFile));
         dos.write(c.byteContent);
         dos.flush();
         dos.close();
-//        System.out.println("Input file hash = " + content.hashCode());
-//        content = content.replaceFirst(DOTA_CAMERA_DISTANCE_REGEX, "dota_camera_distance\0\0\0\0" + wantedZoom);
-//        System.out.println("Output file hash = " + content.hashCode());
-//        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(CLIENT_DLL), "CP1252"))) {
-//            bw.write(content);
-//            bw.flush();
-//            bw.close();
-//        }
         System.out.println("Done.");
     }
-
 }

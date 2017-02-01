@@ -1,8 +1,15 @@
 package dotaclienthacker;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 
 public class GUI extends javax.swing.JFrame {
@@ -11,24 +18,24 @@ public class GUI extends javax.swing.JFrame {
 
         @Override
         public void uncaughtException(Thread t, Throwable e) {
-            JOptionPane.showMessageDialog(null, e.toString());
+            System.out.println(e.getMessage());
         }
     }
 
-//    static {
-//        Thread.setDefaultUncaughtExceptionHandler(new Handler());
-//    }
-
+    static {
+        Thread.setDefaultUncaughtExceptionHandler(new Handler());
+    }
+    
     private ClientDLL c;
 
     public GUI() {
         initComponents();
         try {
             c = ClientDLL.getClientDLL();
-            jTextFieldZoom.setText(c.getZoom());
         } catch (IOException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
         }
+        jTextFieldZoom.setText(c.getZoom());
         setLocationRelativeTo(null);
     }
 
@@ -40,6 +47,7 @@ public class GUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jTextFieldZoom = new javax.swing.JTextField();
         jButtonSetZoom = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
 
         jLabel1.setText("jLabel1");
 
@@ -66,6 +74,8 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
+        jLabel3.setText("by: Nexor");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -78,16 +88,22 @@ public class GUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButtonSetZoom)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(jTextFieldZoom, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButtonSetZoom))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel3)
+                .addContainerGap())
         );
 
         pack();
@@ -107,10 +123,40 @@ public class GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonSetZoomActionPerformed
 
     private void jTextFieldZoomKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldZoomKeyReleased
-        jButtonSetZoom.setEnabled(jTextFieldZoom.getText().matches("\\d+"));
+        jButtonSetZoom.setEnabled(jTextFieldZoom.getText().matches("\\d{4}"));
     }//GEN-LAST:event_jTextFieldZoomKeyReleased
 
+    static void test() {
+        try {
+            Process p = Runtime.getRuntime().exec("reg query HKCR\\dota2\\Shell\\Open\\Command");
+            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String res = "";
+            String aux;
+            while ((aux = br.readLine()) != null) {
+                res += aux;
+            }
+            int exitCode = p.waitFor();
+            String REGEX = "REG_SZ\\s+\"([^\"]+)";
+            Matcher m = Pattern.compile(REGEX).matcher(res);
+                boolean is64 = System.getProperty("os.arch").contains("64");
+            if (m.find()) {
+                String dotaExecutablePathname = m.group(1);
+                File dotaExecutable = new File(dotaExecutablePathname);
+                File correctGameFolder = dotaExecutable.getParentFile()/*win64*/.getParentFile()/*bin*/.getParentFile()/*game*/;
+                File correctClientDLL = new File(correctGameFolder.getAbsolutePath() + File.separator
+                        + "dota" + File.separator
+                        + "bin" + File.separator
+                        + "win" + (is64 ? "64" : "32")/*changes depending on arch*/ + File.separator
+                        + "client.dll");
+            }
+        } catch (IOException | InterruptedException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        System.exit(0);
+    }
+
     public static void main(String args[]) {
+//        test();
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
@@ -141,6 +187,7 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JButton jButtonSetZoom;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JTextField jTextFieldZoom;
     // End of variables declaration//GEN-END:variables
 }
