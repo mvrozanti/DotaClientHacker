@@ -1,8 +1,6 @@
 package dotaclienthacker;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -11,8 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -24,16 +20,18 @@ import java.util.regex.Pattern;
  */
 public class ClientDLL {
 
-//    private static final File NEXOR_CLIENT_DLL = new File("D:\\Steam\\SteamApps\\common\\dota 2 beta\\game\\dota\\bin\\win64\\client.dll");
     private static final byte[] EXPECTED_HEADER = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'd', 'i', 's', 't', 'a', 'n', 'c', 'e', '\0', '\0', '\0', '\0'};
+    private static final byte[] EXPECTED_HEADER_2 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'g', '_', 's', 't', 'a', 'r', 't', '_', 'z', 'o', 'o', 'm', 'e', 'd', '_', 'i', 'n', '\0'};
     private static ClientDLL c;
     private File dllFile;
     private byte[] byteContent;
+    private int zoomType;
     private int zoomIndex;
     private String zoom;
 
     private ClientDLL() {
         zoom = "";
+        zoomType = 0;
         findDLLFile();
     }
 
@@ -89,6 +87,27 @@ public class ClientDLL {
             if (c.byteContent[i] == EXPECTED_HEADER[headerCount]) {
                 headerCount++;
                 if (headerCount == EXPECTED_HEADER.length) {
+                    findZoom(i + 1);
+                    if (!zoom.matches("\\d{3,4}")) {
+                        zoom = "";//reset zoom bc its plain wrong u foktard
+                        findZoom2();
+                    } else {
+                        zoomType = 1;
+                    }
+                    break;
+                }
+            } else {
+                headerCount = 0;
+            }
+        }
+    }
+
+    private void findZoom2() {
+        int headerCount = 0;
+        for (int i = 0; i < c.byteContent.length; i++) {
+            if (c.byteContent[i] == EXPECTED_HEADER_2[headerCount]) {
+                headerCount++;
+                if (headerCount == EXPECTED_HEADER_2.length) {
                     findZoom(i + 1);
                     break;
                 }
