@@ -25,13 +25,11 @@ public class ClientDLL {
     private static ClientDLL c;
     private File dllFile;
     private byte[] byteContent;
-    private int zoomType;
     private int zoomIndex;
     private String zoom;
 
     private ClientDLL() {
         zoom = "";
-        zoomType = 0;
         findDLLFile();
     }
 
@@ -58,7 +56,8 @@ public class ClientDLL {
             }
             String REGEX = "REG_SZ\\s+\"([^\"]+)";
             Matcher m = Pattern.compile(REGEX).matcher(res);
-            boolean is64 = System.getProperty("os.arch").contains("64");
+            String arch = System.getProperty("os.arch");
+            boolean is64 = arch.contains("64") && !arch.contains("32");
             if (m.find()) {
                 String dotaExecutablePathname = m.group(1);
                 File dotaExecutable = new File(dotaExecutablePathname);
@@ -91,8 +90,6 @@ public class ClientDLL {
                     if (!zoom.matches("\\d{3,4}")) {
                         zoom = "";//reset zoom bc its plain wrong u foktard
                         findZoom2();
-                    } else {
-                        zoomType = 1;
                     }
                     break;
                 }
