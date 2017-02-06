@@ -56,8 +56,6 @@ public class ClientDLL {
             }
             String REGEX = "REG_SZ\\s+\"([^\"]+)";
             Matcher m = Pattern.compile(REGEX).matcher(res);
-            String arch = System.getProperty("os.arch");
-            boolean is64 = arch.contains("64") && !arch.contains("32");
             if (m.find()) {
                 String dotaExecutablePathname = m.group(1);
                 File dotaExecutable = new File(dotaExecutablePathname);
@@ -65,7 +63,7 @@ public class ClientDLL {
                 dllFile = new File(correctGameFolder.getAbsolutePath() + File.separator
                         + "dota" + File.separator
                         + "bin" + File.separator
-                        + "win" + (is64 ? "64" : "32")/*changes depending on arch*/ + File.separator
+                        + "win64"/*changes depending on arch*/ + File.separator
                         + "client.dll");
             }
         } catch (IOException ex) {
