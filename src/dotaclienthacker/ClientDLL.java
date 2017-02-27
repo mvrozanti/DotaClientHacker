@@ -22,6 +22,7 @@ public class ClientDLL {
 
     private static final byte[] EXPECTED_HEADER = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'd', 'i', 's', 't', 'a', 'n', 'c', 'e', '\0', '\0', '\0', '\0'};
     private static final byte[] EXPECTED_HEADER_2 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'g', '_', 's', 't', 'a', 'r', 't', '_', 'z', 'o', 'o', 'm', 'e', 'd', '_', 'i', 'n', '\0'};
+    private static final byte[] EXPECTED_HEADER_3 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'm', 'o', 'u', 's', 'e', 'w', 'h', 'e', 'e', 'l', '_', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', '_', 'm', 'u', 'l', 't', 'i', 'p', 'l', 'i', 'e', 'r', '\0'};
     private static ClientDLL c;
     private File dllFile;
     private byte[] byteContent;
@@ -103,6 +104,25 @@ public class ClientDLL {
             if (c.byteContent[i] == EXPECTED_HEADER_2[headerCount]) {
                 headerCount++;
                 if (headerCount == EXPECTED_HEADER_2.length) {
+                    findZoom(i + 1);
+                    if (!zoom.matches("\\d{3,4}")) {
+                        zoom = "";
+                        findZoom3();
+                    }
+                    break;
+                }
+            } else {
+                headerCount = 0;
+            }
+        }
+    }
+
+    private void findZoom3() {
+        int headerCount = 0;
+        for (int i = 0; i < c.byteContent.length; i++) {
+            if (c.byteContent[i] == EXPECTED_HEADER_3[headerCount]) {
+                headerCount++;
+                if (headerCount == EXPECTED_HEADER_3.length) {
                     findZoom(i + 1);
                     break;
                 }
