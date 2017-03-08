@@ -23,6 +23,7 @@ public class ClientDLL {
     private static final byte[] EXPECTED_HEADER = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'd', 'i', 's', 't', 'a', 'n', 'c', 'e', '\0', '\0', '\0', '\0'};
     private static final byte[] EXPECTED_HEADER_2 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'g', '_', 's', 't', 'a', 'r', 't', '_', 'z', 'o', 'o', 'm', 'e', 'd', '_', 'i', 'n', '\0'};
     private static final byte[] EXPECTED_HEADER_3 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'm', 'o', 'u', 's', 'e', 'w', 'h', 'e', 'e', 'l', '_', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', '_', 'm', 'u', 'l', 't', 'i', 'p', 'l', 'i', 'e', 'r', '\0'};
+    private static final byte[] EXPECTED_HEADER_4 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'v', '_', 'm', 'i', 'n', '\0'};
     private static ClientDLL c;
     private File dllFile;
     private byte[] byteContent;
@@ -80,54 +81,25 @@ public class ClientDLL {
      * finds the index of the zoom in the file and assigns the found String.
      */
     private void findZoom() {
-        int headerCount = 0;
-        for (int i = 0; i < c.byteContent.length; i++) {
-            if (c.byteContent[i] == EXPECTED_HEADER[headerCount]) {
-                headerCount++;
-                if (headerCount == EXPECTED_HEADER.length) {
-                    findZoom(i + 1);
-                    if (!zoom.matches("\\d{3,4}")) {
-                        zoom = "";//reset zoom bc its plain wrong u foktard
-                        findZoom2();
+        byte[][] bytes = new byte[][]{EXPECTED_HEADER, EXPECTED_HEADER_2, EXPECTED_HEADER_3, EXPECTED_HEADER_4};
+        int target_header = 0;
+        while (zoom.isEmpty()) {
+            int headerCount = 0;
+            for (int i = 0; i < c.byteContent.length; i++) {
+                if (c.byteContent[i] == bytes[target_header][headerCount]) {
+                    headerCount++;
+                    if (headerCount == bytes[target_header].length) {
+                        findZoom(i + 1);
+                        if (!zoom.matches("\\d{3,4}") || Integer.parseInt(zoom) > 1400) {
+                            zoom = "";//reset zoom bc its plain wrong u foktard
+                            target_header++;
+                            i = 0;
+                        }
+                        break;
                     }
-                    break;
+                } else {
+                    headerCount = 0;
                 }
-            } else {
-                headerCount = 0;
-            }
-        }
-    }
-
-    private void findZoom2() {
-        int headerCount = 0;
-        for (int i = 0; i < c.byteContent.length; i++) {
-            if (c.byteContent[i] == EXPECTED_HEADER_2[headerCount]) {
-                headerCount++;
-                if (headerCount == EXPECTED_HEADER_2.length) {
-                    findZoom(i + 1);
-                    if (!zoom.matches("\\d{3,4}")) {
-                        zoom = "";
-                        findZoom3();
-                    }
-                    break;
-                }
-            } else {
-                headerCount = 0;
-            }
-        }
-    }
-
-    private void findZoom3() {
-        int headerCount = 0;
-        for (int i = 0; i < c.byteContent.length; i++) {
-            if (c.byteContent[i] == EXPECTED_HEADER_3[headerCount]) {
-                headerCount++;
-                if (headerCount == EXPECTED_HEADER_3.length) {
-                    findZoom(i + 1);
-                    break;
-                }
-            } else {
-                headerCount = 0;
             }
         }
     }
