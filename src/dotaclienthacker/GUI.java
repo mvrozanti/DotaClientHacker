@@ -114,35 +114,6 @@ public class GUI extends javax.swing.JFrame {
         jButtonSetZoom.setEnabled(jTextFieldZoom.getText().matches("\\d{4}"));
     }//GEN-LAST:event_jTextFieldZoomKeyReleased
 
-    static void test() {
-        try {
-            Process p = Runtime.getRuntime().exec("reg query HKCR\\dota2\\Shell\\Open\\Command");
-            BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String res = "";
-            String aux;
-            while ((aux = br.readLine()) != null) {
-                res += aux;
-            }
-            int exitCode = p.waitFor();
-            String REGEX = "REG_SZ\\s+\"([^\"]+)";
-            Matcher m = Pattern.compile(REGEX).matcher(res);
-                boolean is64 = System.getProperty("os.arch").contains("64");
-            if (m.find()) {
-                String dotaExecutablePathname = m.group(1);
-                File dotaExecutable = new File(dotaExecutablePathname);
-                File correctGameFolder = dotaExecutable.getParentFile()/*win64*/.getParentFile()/*bin*/.getParentFile()/*game*/;
-                File correctClientDLL = new File(correctGameFolder.getAbsolutePath() + File.separator
-                        + "dota" + File.separator
-                        + "bin" + File.separator
-                        + "win" + (is64 ? "64" : "32")/*changes depending on arch*/ + File.separator
-                        + "client.dll");
-            }
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        System.exit(0);
-    }
-
     public static void main(String args[]) {
 //        test();
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">

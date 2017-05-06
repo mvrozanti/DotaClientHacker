@@ -24,6 +24,7 @@ public class ClientDLL {
     private static final byte[] EXPECTED_HEADER_2 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'g', '_', 's', 't', 'a', 'r', 't', '_', 'z', 'o', 'o', 'm', 'e', 'd', '_', 'i', 'n', '\0'};
     private static final byte[] EXPECTED_HEADER_3 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'm', 'o', 'u', 's', 'e', 'w', 'h', 'e', 'e', 'l', '_', 'd', 'i', 'r', 'e', 'c', 't', 'i', 'o', 'n', '_', 'm', 'u', 'l', 't', 'i', 'p', 'l', 'i', 'e', 'r', '\0'};
     private static final byte[] EXPECTED_HEADER_4 = new byte[]{'d', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'f', 'o', 'v', '_', 'm', 'i', 'n', '\0'};
+    private static final byte[] EXPECTED_HEADER_5 = new byte[]{'\0', '\0', '\0', '\0', 'd', 'o', 't', 'a', '_', 'c', 'a', 'm', 'e', 'r', 'a', '_', 'd', 'i', 's', 't', 'a', 'n', 'c', 'e'};
     private static ClientDLL c;
     private File dllFile;
     private byte[] byteContent;
@@ -62,11 +63,12 @@ public class ClientDLL {
                 String dotaExecutablePathname = m.group(1);
                 File dotaExecutable = new File(dotaExecutablePathname);
                 File correctGameFolder = dotaExecutable.getParentFile()/*win64(1UP)*/.getParentFile()/*bin(1UP)*/.getParentFile()/*game(1UP)*/;
-                dllFile = new File(correctGameFolder.getAbsolutePath() + File.separator
+                String correctDLLFilePath = correctGameFolder.getAbsolutePath() + File.separator
                         + "dota" + File.separator
                         + "bin" + File.separator
                         + "win64"/*changes depending on arch*/ + File.separator
-                        + "client.dll");
+                        + "client.dll";
+                dllFile = new File(correctDLLFilePath);
             }
         } catch (IOException ex) {
             Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -81,7 +83,7 @@ public class ClientDLL {
      * finds the index of the zoom in the file and assigns the found String.
      */
     private void findZoom() {
-        byte[][] bytes = new byte[][]{EXPECTED_HEADER, EXPECTED_HEADER_2, EXPECTED_HEADER_3, EXPECTED_HEADER_4};
+        byte[][] bytes = new byte[][]{EXPECTED_HEADER, EXPECTED_HEADER_2, EXPECTED_HEADER_3, EXPECTED_HEADER_4, EXPECTED_HEADER_5/*this one is special*/};
         int target_header = 0;
         while (zoom.isEmpty()) {
             int headerCount = 0;
@@ -89,8 +91,14 @@ public class ClientDLL {
                 if (c.byteContent[i] == bytes[target_header][headerCount]) {
                     headerCount++;
                     if (headerCount == bytes[target_header].length) {
-                        findZoom(i + 1);
-                        if (!zoom.matches("\\d{3,4}") || Integer.parseInt(zoom) > 1400) {
+                        if (!bytes[target_header].equals(EXPECTED_HEADER_5)) {
+                            findZoom(i + 1);
+                        } else {
+                            findZoom(i - EXPECTED_HEADER_5.length - 3);
+                        }
+                        if (!zoom.matches("\\d{3,4}")
+                                || Integer.parseInt(zoom) > 1400/*impossible to last hit*/
+                                || Integer.parseInt(zoom) < 1134/*default*/) {
                             zoom = "";//reset zoom bc its plain wrong u foktard
                             target_header++;
                             i = 0;
